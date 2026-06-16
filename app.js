@@ -1,7 +1,7 @@
 const statuses = ["Em contato", "Fazer follow-up", "Visita agendada", "Passado ao corretor", "Perdido"];
 const contactStatuses = ["Nao respondeu", "Respondeu", "Aguardando retorno", "Agendado", "Encerrado"];
 const channels = ["WhatsApp", "Instagram", "TikTok"];
-const properties = ["Pontal EcoLife", "Intense Parque Cascavel", "Rosas do Parque", "Laguna Setor Bueno"];
+const properties = ["Pontal Ecolife", "Intense - Parque Cascavel", "Rosas do Parque", "Laguna - Setor Bueno"];
 const loginUsers = [
   { user: "honest", password: "honest123" },
   { user: "chefe", password: "honest123" }
