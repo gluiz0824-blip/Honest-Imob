@@ -299,7 +299,19 @@ function showView(view) {
 
 function dateLabel(value) {
   if (!value) return "Sem data";
-  return new Date(`${value}T12:00:00`).toLocaleDateString("pt-BR");
+  const date = parseLeadDate(value);
+  if (Number.isNaN(date.getTime())) return "Sem data";
+  return date.toLocaleDateString("pt-BR");
+}
+
+function parseLeadDate(value) {
+  if (!value) return new Date("invalid");
+  if (value instanceof Date) return value;
+  const text = String(value);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    return new Date(`${text}T12:00:00`);
+  }
+  return new Date(text);
 }
 
 function channelClass(channel) {
@@ -330,7 +342,10 @@ function periodLeads() {
   if (period === "all") return leads;
   const limit = new Date();
   limit.setDate(limit.getDate() - Number(period));
-  return leads.filter((lead) => new Date(`${lead.createdAt}T12:00:00`) >= limit);
+  return leads.filter((lead) => {
+    const date = parseLeadDate(lead.createdAt);
+    return !Number.isNaN(date.getTime()) && date >= limit;
+  });
 }
 
 function renderKpis() {
