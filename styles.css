@@ -65,13 +65,13 @@ button {
   pointer-events: none;
   background:
     linear-gradient(90deg, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.62)),
-    url("./login-bg.png");
-  background-size: min(740px, 88vw) auto;
+    url("./login-bg.jpg");
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   opacity: 0.92;
-  filter: contrast(1.05) brightness(0.78);
-  animation: loginBgMove 20s ease-in-out infinite alternate;
+  filter: contrast(1.04) brightness(0.76);
+  animation: loginBgMove 24s ease-in-out infinite alternate;
 }
 
 .login-screen::after {
@@ -100,15 +100,15 @@ button {
 
 @keyframes loginBgMove {
   0% {
-    transform: scale(1) translate3d(-0.4%, -0.2%, 0);
+    transform: scale(1.01) translate3d(-0.35%, -0.2%, 0);
   }
 
   50% {
-    transform: scale(1.01) translate3d(0.4%, 0.25%, 0);
+    transform: scale(1.018) translate3d(0.35%, 0.25%, 0);
   }
 
   100% {
-    transform: scale(1) translate3d(0.6%, -0.2%, 0);
+    transform: scale(1.01) translate3d(0.5%, -0.2%, 0);
   }
 }
 
