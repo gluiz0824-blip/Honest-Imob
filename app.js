@@ -495,12 +495,14 @@ function createLeadsPdf() {
     const pageRows = rows.slice(pageIndex * rowsPerPage, (pageIndex + 1) * rowsPerPage);
     const lines = [];
 
+    lines.push("0 g");
     lines.push("BT /F1 20 Tf 36 796 Td (Honest Imob - SDR) Tj ET");
     lines.push(`BT /F1 10 Tf 36 778 Td (${pdfText(`Relatorio de leads - ${dateLabel(todayPlus(0))}`)}) Tj ET`);
     lines.push(`BT /F1 9 Tf 500 778 Td (${pdfText(`Pag. ${pageIndex + 1}/${totalPages}`)}) Tj ET`);
     lines.push(`0.94 g ${margin} ${tableTop} ${pageWidth - margin * 2} 26 re f`);
     lines.push("0 G 0.7 w");
     lines.push(`${margin} ${tableTop} ${pageWidth - margin * 2} 26 re S`);
+    lines.push("0 g");
     columns.forEach((column) => {
       lines.push(`BT /F1 9 Tf ${column.x} ${tableTop + 9} Td (${pdfText(column.label)}) Tj ET`);
     });
@@ -510,6 +512,7 @@ function createLeadsPdf() {
       const fill = index % 2 === 0 ? "1 g" : "0.985 g";
       lines.push(`${fill} ${margin} ${y} ${pageWidth - margin * 2} ${rowHeight} re f`);
       lines.push(`0.82 G 0.4 w ${margin} ${y} ${pageWidth - margin * 2} ${rowHeight} re S`);
+      lines.push("0 g");
       columns.forEach((column) => {
         const value = truncateForPdf(row[column.key], column.width);
         lines.push(`BT /F1 8 Tf ${column.x} ${y + 22} Td (${pdfText(value)}) Tj ET`);
@@ -517,6 +520,7 @@ function createLeadsPdf() {
     });
 
     if (!rows.length) {
+      lines.push("0 g");
       lines.push("BT /F1 11 Tf 36 704 Td (Nenhum lead cadastrado.) Tj ET");
     }
 
