@@ -57,7 +57,7 @@ const sampleLeads = [
     channel: "WhatsApp",
     status: "Passado ao corretor",
     contactStatus: "Encerrado",
-    propertyName: "Lagunas Setor Bueno",
+    propertyName: "Laguna - Setor Bueno",
     firstContactDate: todayPlus(-3),
     notes: "Lead ja enviado ao corretor responsavel para continuidade.",
     createdAt: todayPlus(-12)
