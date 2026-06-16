@@ -1,4 +1,4 @@
-const statuses = ["Novo", "Em contato", "Qualificado", "Visita agendada", "Passado ao corretor", "Perdido"];
+const statuses = ["Em contato", "Fazer follow-up", "Visita agendada", "Passado ao corretor", "Perdido"];
 const channels = ["WhatsApp", "Instagram", "TikTok"];
 const properties = ["Pontal EcoLife", "Intense Parque Cascavel", "Rosas do Parque", "Lagunas Setor Bueno"];
 const loginUsers = [
@@ -27,7 +27,7 @@ const sampleLeads = [
     name: "Rafael Costa",
     phone: "(62) 99773-5521",
     channel: "Instagram",
-    status: "Qualificado",
+    status: "Fazer follow-up",
     propertyName: "Intense Parque Cascavel",
     profile: "Qualificado",
     firstContactDate: todayPlus(-1),
@@ -63,7 +63,7 @@ const sampleLeads = [
     name: "Bruno Martins",
     phone: "(62) 98110-4429",
     channel: "Instagram",
-    status: "Novo",
+    status: "Em contato",
     propertyName: "Pontal EcoLife",
     profile: "Qualificado",
     firstContactDate: todayPlus(0),
@@ -169,12 +169,13 @@ function showApp() {
 
 function normalizeLead(lead) {
   const propertyName = lead.propertyName || lead.nomeImovel || lead.address || lead.endereco || lead.interest || lead.imovel || "";
+  const migratedStatus = lead.status === "Novo" ? "Em contato" : lead.status === "Qualificado" ? "Fazer follow-up" : lead.status;
   return {
     id: lead.id || makeId(),
     name: lead.name || "Lead sem nome",
     phone: lead.phone || "",
     channel: channels.includes(lead.channel) ? lead.channel : "WhatsApp",
-    status: statuses.includes(lead.status) ? lead.status : "Novo",
+    status: statuses.includes(migratedStatus) ? migratedStatus : "Em contato",
     propertyName: properties.includes(propertyName) ? propertyName : properties[0],
     profile: lead.profile || lead.temperature || lead.perfil || "Qualificado",
     firstContactDate: lead.firstContactDate || lead.nextContact || lead.proximoContato || lead.createdAt || todayPlus(0),
@@ -254,7 +255,7 @@ function periodLeads() {
 
 function renderKpis() {
   const active = leads.filter((lead) => !["Passado ao corretor", "Perdido"].includes(lead.status));
-  const qualified = leads.filter((lead) => ["Qualificado", "Visita agendada", "Passado ao corretor"].includes(lead.status));
+  const qualified = leads.filter((lead) => ["Fazer follow-up", "Visita agendada", "Passado ao corretor"].includes(lead.status));
   const passed = leads.filter((lead) => lead.status === "Passado ao corretor");
   const kpis = [
     ["Leads totais", leads.length, "entrada dos canais"],
@@ -417,7 +418,7 @@ function openLeadDialog(id) {
   document.querySelector("#name").value = lead?.name || "";
   document.querySelector("#phone").value = lead?.phone || "";
   document.querySelector("#channel").value = lead?.channel || "WhatsApp";
-  document.querySelector("#status").value = lead?.status || "Novo";
+  document.querySelector("#status").value = lead?.status || "Em contato";
   document.querySelector("#interest").value = lead?.propertyName || "";
   document.querySelector("#temperature").value = lead?.profile || "Qualificado";
   document.querySelector("#nextContact").value = lead?.firstContactDate || todayPlus(0);
@@ -468,31 +469,23 @@ function exportLeads() {
 }
 
 function createLeadsPdf() {
-  const pageWidth = 842;
-  const pageHeight = 595;
+  const pageWidth = 595;
+  const pageHeight = 842;
   const margin = 32;
-  const rowHeight = 24;
-  const headerY = 520;
-  const rowsPerPage = 17;
+  const rowHeight = 38;
+  const tableTop = 742;
+  const rowsPerPage = 15;
   const columns = [
-    { label: "Lead", key: "name", x: 36, width: 112 },
-    { label: "Telefone", key: "phone", x: 150, width: 92 },
-    { label: "Canal", key: "channel", x: 244, width: 70 },
-    { label: "Imovel", key: "propertyName", x: 316, width: 132 },
-    { label: "Etapa", key: "status", x: 450, width: 110 },
-    { label: "Perfil", key: "profile", x: 562, width: 112 },
-    { label: "1o contato", key: "firstContactDate", x: 676, width: 74 },
-    { label: "Obs.", key: "notes", x: 752, width: 54 }
+    { label: "Nome", key: "name", x: 38, width: 118 },
+    { label: "Numero", key: "phone", x: 160, width: 96 },
+    { label: "Imovel de interesse", key: "propertyName", x: 260, width: 128 },
+    { label: "Observacao", key: "notes", x: 392, width: 158 }
   ];
 
   const rows = leads.map((lead) => ({
     name: lead.name,
     phone: lead.phone,
-    channel: lead.channel,
     propertyName: lead.propertyName || "Nao informado",
-    status: lead.status,
-    profile: lead.profile,
-    firstContactDate: dateLabel(lead.firstContactDate),
     notes: lead.notes || ""
   }));
   const pages = [];
@@ -502,29 +495,29 @@ function createLeadsPdf() {
     const pageRows = rows.slice(pageIndex * rowsPerPage, (pageIndex + 1) * rowsPerPage);
     const lines = [];
 
-    lines.push("BT /F1 18 Tf 36 558 Td (Honest Imob - SDR) Tj ET");
-    lines.push(`BT /F1 9 Tf 36 540 Td (${pdfText(`Relatorio de leads - ${dateLabel(todayPlus(0))}`)}) Tj ET`);
-    lines.push(`BT /F1 9 Tf 752 540 Td (${pdfText(`Pag. ${pageIndex + 1}/${totalPages}`)}) Tj ET`);
-    lines.push(`0.94 g ${margin} 502 ${pageWidth - margin * 2} 24 re f`);
+    lines.push("BT /F1 20 Tf 36 796 Td (Honest Imob - SDR) Tj ET");
+    lines.push(`BT /F1 10 Tf 36 778 Td (${pdfText(`Relatorio de leads - ${dateLabel(todayPlus(0))}`)}) Tj ET`);
+    lines.push(`BT /F1 9 Tf 500 778 Td (${pdfText(`Pag. ${pageIndex + 1}/${totalPages}`)}) Tj ET`);
+    lines.push(`0.94 g ${margin} ${tableTop} ${pageWidth - margin * 2} 26 re f`);
     lines.push("0 G 0.7 w");
-    lines.push(`${margin} 502 ${pageWidth - margin * 2} 24 re S`);
+    lines.push(`${margin} ${tableTop} ${pageWidth - margin * 2} 26 re S`);
     columns.forEach((column) => {
-      lines.push(`BT /F1 8 Tf ${column.x} 511 Td (${pdfText(column.label)}) Tj ET`);
+      lines.push(`BT /F1 9 Tf ${column.x} ${tableTop + 9} Td (${pdfText(column.label)}) Tj ET`);
     });
 
     pageRows.forEach((row, index) => {
-      const y = headerY - 42 - index * rowHeight;
+      const y = tableTop - rowHeight - index * rowHeight;
       const fill = index % 2 === 0 ? "1 g" : "0.985 g";
-      lines.push(`${fill} ${margin} ${y - 8} ${pageWidth - margin * 2} ${rowHeight} re f`);
-      lines.push(`0.82 G 0.4 w ${margin} ${y - 8} ${pageWidth - margin * 2} ${rowHeight} re S`);
+      lines.push(`${fill} ${margin} ${y} ${pageWidth - margin * 2} ${rowHeight} re f`);
+      lines.push(`0.82 G 0.4 w ${margin} ${y} ${pageWidth - margin * 2} ${rowHeight} re S`);
       columns.forEach((column) => {
         const value = truncateForPdf(row[column.key], column.width);
-        lines.push(`BT /F1 7 Tf ${column.x} ${y + 1} Td (${pdfText(value)}) Tj ET`);
+        lines.push(`BT /F1 8 Tf ${column.x} ${y + 22} Td (${pdfText(value)}) Tj ET`);
       });
     });
 
     if (!rows.length) {
-      lines.push("BT /F1 11 Tf 36 460 Td (Nenhum lead cadastrado.) Tj ET");
+      lines.push("BT /F1 11 Tf 36 704 Td (Nenhum lead cadastrado.) Tj ET");
     }
 
     pages.push(lines.join("\n"));

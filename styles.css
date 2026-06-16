@@ -426,7 +426,7 @@ h2 {
 }
 
 .funnel-step.em-contato { border-left-color: var(--cyan); }
-.funnel-step.qualificado { border-left-color: var(--green); }
+.funnel-step.fazer-follow-up { border-left-color: var(--green); }
 .funnel-step.visita-agendada { border-left-color: var(--amber); }
 .funnel-step.passado-ao-corretor { border-left-color: var(--violet); }
 .funnel-step.perdido { border-left-color: var(--rose); }
@@ -460,7 +460,7 @@ h2 {
 }
 
 .compact-card.em-contato { border-left-color: var(--cyan); }
-.compact-card.qualificado { border-left-color: var(--green); }
+.compact-card.fazer-follow-up { border-left-color: var(--green); }
 .compact-card.visita-agendada { border-left-color: var(--amber); }
 .compact-card.passado-ao-corretor { border-left-color: var(--violet); }
 .compact-card.perdido { border-left-color: var(--rose); }
@@ -524,9 +524,8 @@ h2 {
 .tag.channel-whatsapp { background: #e7f7ef; color: #137447; }
 .tag.channel-instagram { background: #fff0f3; color: #a4162a; }
 .tag.channel-tiktok { background: #eaf6fb; color: #14637f; }
-.tag.status.novo { background: #f0f0ed; color: #111; }
 .tag.status.em-contato { background: #eaf6fb; color: #14637f; }
-.tag.status.qualificado { background: #e7f7ef; color: #137447; }
+.tag.status.fazer-follow-up { background: #e7f7ef; color: #137447; }
 .tag.status.visita-agendada { background: #fff6df; color: #7a5108; }
 .tag.status.passado-ao-corretor { background: #f0edff; color: #4e36a4; }
 .tag.status.perdido { background: #fff0f3; color: #a4162a; }
@@ -563,7 +562,7 @@ h2 {
 }
 
 .kanban-column.em-contato { border-top-color: var(--cyan); }
-.kanban-column.qualificado { border-top-color: var(--green); }
+.kanban-column.fazer-follow-up { border-top-color: var(--green); }
 .kanban-column.visita-agendada { border-top-color: var(--amber); }
 .kanban-column.passado-ao-corretor { border-top-color: var(--violet); }
 .kanban-column.perdido { border-top-color: var(--rose); }
