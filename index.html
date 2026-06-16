@@ -7,7 +7,31 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="app-shell">
+    <section class="login-screen" id="loginScreen" aria-label="Login">
+      <form class="login-card" id="loginForm">
+        <div class="login-brand">
+          <span class="brand-mark">H</span>
+          <div>
+            <strong>Honest Imob - SDR</strong>
+            <span>Acesso restrito</span>
+          </div>
+        </div>
+        <div>
+          <p class="eyebrow">Entrar no sistema</p>
+          <h1>Login</h1>
+        </div>
+        <label>Usuario
+          <input id="loginUser" autocomplete="username" required placeholder="Digite seu usuario" />
+        </label>
+        <label>Senha
+          <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Digite sua senha" />
+        </label>
+        <p class="login-error" id="loginError" role="alert"></p>
+        <button class="primary-button" type="submit">Entrar</button>
+      </form>
+    </section>
+
+    <div class="app-shell locked" id="appShell">
       <aside class="sidebar" aria-label="Navegacao principal">
         <div class="brand">
           <span class="brand-mark">H</span>
@@ -42,6 +66,7 @@
               <input id="importInput" type="file" accept=".json,.csv" />
             </label>
             <button class="primary-button" id="newLeadBtn" type="button">Novo Lead</button>
+            <button class="ghost-button" id="logoutBtn" type="button">Sair</button>
           </div>
         </header>
 

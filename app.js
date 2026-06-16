@@ -1,6 +1,11 @@
 const statuses = ["Novo", "Em contato", "Qualificado", "Visita agendada", "Passado ao corretor", "Perdido"];
 const channels = ["WhatsApp", "Instagram", "TikTok"];
 const properties = ["Pontal EcoLife", "Intense Parque Cascavel", "Rosas do Parque", "Lagunas Setor Bueno"];
+const loginUsers = [
+  { user: "honest", password: "honest123" },
+  { user: "chefe", password: "honest123" }
+];
+const authKey = "honest-imob-auth";
 const storageKey = "honest-imob-sdr-leads-v4";
 const previousStorageKeys = ["imob-sdr-leads-v3", "imob-sdr-leads-v2"];
 
@@ -70,6 +75,12 @@ const sampleLeads = [
 let leads = loadLeads();
 
 const els = {
+  loginScreen: document.querySelector("#loginScreen"),
+  loginForm: document.querySelector("#loginForm"),
+  loginUser: document.querySelector("#loginUser"),
+  loginPassword: document.querySelector("#loginPassword"),
+  loginError: document.querySelector("#loginError"),
+  appShell: document.querySelector("#appShell"),
   kpiGrid: document.querySelector("#kpiGrid"),
   channelChart: document.querySelector("#channelChart"),
   funnelChart: document.querySelector("#funnelChart"),
@@ -88,8 +99,12 @@ const els = {
   form: document.querySelector("#leadForm"),
   modalTitle: document.querySelector("#modalTitle"),
   deleteLeadBtn: document.querySelector("#deleteLeadBtn"),
-  importInput: document.querySelector("#importInput")
+  importInput: document.querySelector("#importInput"),
+  logoutBtn: document.querySelector("#logoutBtn")
 };
+
+els.loginForm.addEventListener("submit", handleLogin);
+els.logoutBtn.addEventListener("click", handleLogout);
 
 document.querySelectorAll("[data-view-link]").forEach((link) => {
   link.addEventListener("click", (event) => {
@@ -121,6 +136,37 @@ function todayPlus(days) {
 
 function makeId() {
   return `lead-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function handleLogin(event) {
+  event.preventDefault();
+  const user = els.loginUser.value.trim().toLowerCase();
+  const password = els.loginPassword.value;
+  const isValid = loginUsers.some((account) => account.user === user && account.password === password);
+
+  if (!isValid) {
+    els.loginError.textContent = "Usuario ou senha incorretos.";
+    els.loginPassword.value = "";
+    els.loginPassword.focus();
+    return;
+  }
+
+  sessionStorage.setItem(authKey, "true");
+  els.loginError.textContent = "";
+  showApp();
+}
+
+function handleLogout() {
+  sessionStorage.removeItem(authKey);
+  els.loginPassword.value = "";
+  els.appShell.classList.add("locked");
+  els.loginScreen.classList.remove("hidden");
+  els.loginUser.focus();
+}
+
+function showApp() {
+  els.loginScreen.classList.add("hidden");
+  els.appShell.classList.remove("locked");
 }
 
 function normalizeLead(lead) {
@@ -479,3 +525,8 @@ function render() {
 
 fillStatusSelects();
 render();
+if (sessionStorage.getItem(authKey) === "true") {
+  showApp();
+} else {
+  els.loginUser.focus();
+}
