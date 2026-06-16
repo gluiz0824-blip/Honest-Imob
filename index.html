@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Honest Imob - SDR</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navegacao principal">
+        <div class="brand">
+          <span class="brand-mark">H</span>
+          <div>
+            <strong>Honest Imob - SDR</strong>
+            <span>Leads de revenda</span>
+          </div>
+        </div>
+        <nav class="nav-list">
+          <a class="active" href="#dashboard" data-view-link="dashboard">Dashboard</a>
+          <a href="#pipeline" data-view-link="pipeline">Pipeline</a>
+          <a href="#leads" data-view-link="leads">Leads</a>
+          <a href="#agenda" data-view-link="agenda">Agenda</a>
+        </nav>
+        <div class="mini-card">
+          <span>Leads qualificados</span>
+          <strong id="goalProgress">0%</strong>
+          <div class="progress-track"><span id="goalBar"></span></div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Honest Imob - SDR</p>
+            <h1>Controle de Leads</h1>
+          </div>
+          <div class="actions">
+            <button class="ghost-button" id="exportBtn" type="button" title="Exportar leads">Exportar</button>
+            <label class="ghost-button file-button" title="Importar leads">
+              Importar
+              <input id="importInput" type="file" accept=".json,.csv" />
+            </label>
+            <button class="primary-button" id="newLeadBtn" type="button">Novo Lead</button>
+          </div>
+        </header>
+
+        <section class="view active" id="dashboard" data-view="dashboard">
+          <div class="kpi-grid" id="kpiGrid"></div>
+          <div class="dashboard-grid">
+            <section class="panel span-2">
+              <div class="panel-head">
+                <div>
+                  <h2>Entrada por canal</h2>
+                  <p>Veja quais canais trazem mais interessados em imoveis.</p>
+                </div>
+                <select id="periodFilter" aria-label="Periodo">
+                  <option value="30">Ultimos 30 dias</option>
+                  <option value="7">Ultimos 7 dias</option>
+                  <option value="all">Tudo</option>
+                </select>
+              </div>
+              <div class="channel-chart" id="channelChart"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Funil SDR</h2>
+                  <p>Etapas atuais antes de passar para o corretor.</p>
+                </div>
+              </div>
+              <div class="funnel" id="funnelChart"></div>
+            </section>
+            <section class="panel span-3">
+              <div class="panel-head">
+                <div>
+                  <h2>Leads prioritarios</h2>
+                  <p>Priorize quem tem perfil bom para revenda em Goiania.</p>
+                </div>
+              </div>
+              <div class="hot-list" id="hotList"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="pipeline" data-view="pipeline">
+          <div class="toolbar">
+            <div class="search-wrap">
+              <input id="pipelineSearch" type="search" placeholder="Buscar nome, telefone ou nome do imovel..." />
+            </div>
+          </div>
+          <div class="kanban" id="kanban"></div>
+        </section>
+
+        <section class="view" id="leads" data-view="leads">
+          <div class="toolbar">
+            <input id="searchInput" type="search" placeholder="Buscar nome, telefone ou nome do imovel..." />
+            <select id="channelFilter" aria-label="Canal">
+              <option value="all">Todos os canais</option>
+              <option value="WhatsApp">WhatsApp</option>
+              <option value="Instagram">Instagram</option>
+              <option value="TikTok">TikTok</option>
+            </select>
+            <select id="statusFilter" aria-label="Etapa">
+              <option value="all">Todas as etapas</option>
+            </select>
+          </div>
+          <div class="table-shell">
+            <table>
+              <thead>
+                <tr>
+                  <th>Lead</th>
+                  <th>Canal</th>
+                  <th>Imovel</th>
+                  <th>Etapa</th>
+                  <th>Perfil</th>
+                  <th>Primeiro contato</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="leadRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="agenda" data-view="agenda">
+          <div class="agenda-layout">
+            <section class="panel span-2">
+              <div class="panel-head">
+                <div>
+                  <h2>Primeiros contatos registrados</h2>
+                  <p>Acompanhe quando cada lead entrou no atendimento.</p>
+                </div>
+              </div>
+              <div id="agendaList" class="agenda-list"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Checklist SDR imobiliario</h2>
+                  <p>Roteiro rapido para qualificar antes do corretor.</p>
+                </div>
+              </div>
+              <ul class="checklist">
+                <li>Confirmar nome e telefone do lead</li>
+                <li>Registrar o nome do imovel de interesse</li>
+                <li>Marcar a etapa atual do atendimento SDR</li>
+                <li>Definir o perfil do lead com clareza</li>
+                <li>Anotar observacoes importantes da conversa</li>
+              </ul>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="leadDialog">
+      <form id="leadForm" method="dialog">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">Ficha do lead imobiliario</p>
+            <h2 id="modalTitle">Novo Lead</h2>
+          </div>
+          <button type="button" class="icon-button" id="closeDialogBtn" aria-label="Fechar">x</button>
+        </div>
+        <input type="hidden" id="leadId" />
+        <div class="form-grid">
+          <label>Nome
+            <input id="name" required placeholder="Ex.: Ana Souza" />
+          </label>
+          <label>Telefone
+            <input id="phone" required placeholder="(11) 99999-9999" />
+          </label>
+          <label>Canal
+            <select id="channel" required>
+              <option>WhatsApp</option>
+              <option>Instagram</option>
+              <option>TikTok</option>
+            </select>
+          </label>
+          <label>Etapa SDR
+            <select id="status" required></select>
+          </label>
+          <label>Perfil do lead
+            <select id="temperature">
+              <option>Pronto para visita</option>
+              <option>Qualificado</option>
+              <option>Pesquisar opcoes</option>
+              <option>Sem perfil</option>
+            </select>
+          </label>
+          <label>Data do primeiro contato
+            <input id="nextContact" type="date" />
+          </label>
+          <label class="full">Imovel
+            <select id="interest" required>
+              <option>Pontal EcoLife</option>
+              <option>Intense Parque Cascavel</option>
+              <option>Rosas do Parque</option>
+              <option>Lagunas Setor Bueno</option>
+            </select>
+          </label>
+          <label class="full">Observacoes
+            <textarea id="notes" rows="4" placeholder="Resumo da conversa, interesse, objecoes e combinado com o corretor"></textarea>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="danger-button" id="deleteLeadBtn" type="button">Excluir</button>
+          <span></span>
+          <button class="ghost-button" type="button" id="cancelBtn">Cancelar</button>
+          <button class="primary-button" type="submit">Salvar Lead</button>
+        </div>
+      </form>
+    </dialog>
+
+    <template id="emptyStateTemplate">
+      <div class="empty-state">
+        <strong>Nenhum lead encontrado</strong>
+        <span>Cadastre um novo lead ou ajuste os filtros.</span>
+      </div>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
