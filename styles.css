@@ -526,6 +526,7 @@ h2 {
 .tag.status.visita-agendada { background: #fff6df; color: #7a5108; }
 .tag.status.passado-ao-corretor { background: #f0edff; color: #4e36a4; }
 .tag.status.perdido { background: #fff0f3; color: #a4162a; }
+.tag.contact { background: #f4f4f0; color: #333; border: 1px solid #dededb; }
 
 .toolbar {
   margin-bottom: 16px;

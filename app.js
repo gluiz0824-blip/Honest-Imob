@@ -1,4 +1,5 @@
 const statuses = ["Em contato", "Fazer follow-up", "Visita agendada", "Passado ao corretor", "Perdido"];
+const contactStatuses = ["Nao respondeu", "Respondeu", "Aguardando retorno", "Agendado", "Encerrado"];
 const channels = ["WhatsApp", "Instagram", "TikTok"];
 const properties = ["Pontal EcoLife", "Intense Parque Cascavel", "Rosas do Parque", "Lagunas Setor Bueno"];
 const loginUsers = [
@@ -19,6 +20,7 @@ const sampleLeads = [
     phone: "(62) 98422-1188",
     channel: "WhatsApp",
     status: "Visita agendada",
+    contactStatus: "Agendado",
     propertyName: "Pontal EcoLife",
     firstContactDate: todayPlus(0),
     notes: "Lead interessado em revenda. Quer entender condicoes e disponibilidade para visita.",
@@ -30,6 +32,7 @@ const sampleLeads = [
     phone: "(62) 99773-5521",
     channel: "Instagram",
     status: "Fazer follow-up",
+    contactStatus: "Aguardando retorno",
     propertyName: "Intense Parque Cascavel",
     firstContactDate: todayPlus(-1),
     notes: "Perguntou se o imovel aceita financiamento. Precisa de retorno.",
@@ -41,6 +44,7 @@ const sampleLeads = [
     phone: "(62) 98840-2201",
     channel: "TikTok",
     status: "Em contato",
+    contactStatus: "Respondeu",
     propertyName: "Rosas do Parque",
     firstContactDate: todayPlus(-1),
     notes: "Chegou por video do TikTok. Ainda pediu mais informacoes.",
@@ -52,6 +56,7 @@ const sampleLeads = [
     phone: "(62) 99131-8702",
     channel: "WhatsApp",
     status: "Passado ao corretor",
+    contactStatus: "Encerrado",
     propertyName: "Lagunas Setor Bueno",
     firstContactDate: todayPlus(-3),
     notes: "Lead ja enviado ao corretor responsavel para continuidade.",
@@ -63,6 +68,7 @@ const sampleLeads = [
     phone: "(62) 98110-4429",
     channel: "Instagram",
     status: "Em contato",
+    contactStatus: "Nao respondeu",
     propertyName: "Pontal EcoLife",
     firstContactDate: todayPlus(0),
     notes: "Primeiro contato recebido pelo Instagram. Aguardando resposta.",
@@ -180,6 +186,7 @@ function normalizeLead(lead) {
     phone: lead.phone || "",
     channel: channels.includes(lead.channel) ? lead.channel : "WhatsApp",
     status: statuses.includes(migratedStatus) ? migratedStatus : "Em contato",
+    contactStatus: contactStatuses.includes(lead.contactStatus || lead.contact_status) ? lead.contactStatus || lead.contact_status : "Nao respondeu",
     propertyName: properties.includes(propertyName) ? propertyName : properties[0],
     firstContactDate: lead.firstContactDate || lead.nextContact || lead.proximoContato || lead.createdAt || todayPlus(0),
     notes: lead.notes || lead.observacoes || "",
@@ -221,6 +228,7 @@ function dbLeadToApp(row) {
     channel: row.channel,
     propertyName: row.property_name,
     status: row.status,
+    contactStatus: row.contact_status,
     firstContactDate: row.first_contact,
     notes: row.notes,
     createdAt: row.created_at
@@ -234,6 +242,7 @@ function appLeadToDb(lead) {
     channel: lead.channel,
     property_name: lead.propertyName,
     status: lead.status,
+    contact_status: lead.contactStatus,
     first_contact: lead.firstContactDate,
     notes: lead.notes
   };
@@ -334,6 +343,7 @@ function filteredLeads({ table = false, pipeline = false } = {}) {
       lead.name,
       lead.phone,
       lead.propertyName,
+      lead.contactStatus,
       lead.notes
     ].some((field) => String(field || "").toLowerCase().includes(search));
     const matchesChannel = !table || els.channelFilter.value === "all" || lead.channel === els.channelFilter.value;
@@ -414,6 +424,7 @@ function leadCard(lead) {
       <div class="tags">
         <span class="tag channel-${channelClass(lead.channel)}">${lead.channel}</span>
         <span class="tag status ${statusClass(lead.status)}">${lead.status}</span>
+        <span class="tag contact">${lead.contactStatus}</span>
       </div>
     </article>
   `;
@@ -459,7 +470,7 @@ function renderKanban() {
 function renderRows() {
   const data = filteredLeads({ table: true });
   if (!data.length) {
-    els.leadRows.innerHTML = `<tr><td colspan="6">${emptyState()}</td></tr>`;
+    els.leadRows.innerHTML = `<tr><td colspan="7">${emptyState()}</td></tr>`;
     return;
   }
   els.leadRows.innerHTML = data.map((lead) => `
@@ -468,6 +479,7 @@ function renderRows() {
       <td><span class="tag channel-${channelClass(lead.channel)}">${lead.channel}</span></td>
       <td><strong>${lead.propertyName || "Nao informado"}</strong></td>
       <td><span class="tag status ${statusClass(lead.status)}">${lead.status}</span></td>
+      <td><span class="tag contact">${lead.contactStatus}</span></td>
       <td>${dateLabel(lead.firstContactDate)}</td>
       <td><button class="row-button ghost-button" type="button" data-edit="${lead.id}">Editar</button></td>
     </tr>
@@ -507,6 +519,10 @@ function fillStatusSelects() {
   els.statusFilter.innerHTML = `<option value="all">Todas as etapas</option>${options}`;
 }
 
+function fillContactStatusSelect() {
+  document.querySelector("#contactStatus").innerHTML = contactStatuses.map((status) => `<option>${status}</option>`).join("");
+}
+
 function fillPropertyFilters() {
   const options = properties.map((property) => `<option>${property}</option>`).join("");
   els.propertyFilter.innerHTML = `<option value="all">Todos os imoveis</option>${options}`;
@@ -521,6 +537,7 @@ function openLeadDialog(id) {
   document.querySelector("#phone").value = lead?.phone || "";
   document.querySelector("#channel").value = lead?.channel || "WhatsApp";
   document.querySelector("#status").value = lead?.status || "Em contato";
+  document.querySelector("#contactStatus").value = lead?.contactStatus || "Nao respondeu";
   document.querySelector("#interest").value = lead?.propertyName || "";
   document.querySelector("#nextContact").value = lead?.firstContactDate || todayPlus(0);
   document.querySelector("#notes").value = lead?.notes || "";
@@ -538,6 +555,7 @@ async function saveLead(event) {
     phone: document.querySelector("#phone").value.trim(),
     channel: document.querySelector("#channel").value,
     status: document.querySelector("#status").value,
+    contactStatus: document.querySelector("#contactStatus").value,
     propertyName: document.querySelector("#interest").value.trim(),
     firstContactDate: document.querySelector("#nextContact").value,
     notes: document.querySelector("#notes").value.trim(),
@@ -718,6 +736,7 @@ function render() {
 }
 
 fillStatusSelects();
+fillContactStatusSelect();
 fillPropertyFilters();
 render();
 if (sessionStorage.getItem(authKey) === "true") {
