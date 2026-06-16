@@ -108,6 +108,9 @@
             <div class="search-wrap">
               <input id="pipelineSearch" type="search" placeholder="Buscar nome, telefone ou nome do imovel..." />
             </div>
+            <select id="pipelinePropertyFilter" aria-label="Imovel no pipeline">
+              <option value="all">Todos os imoveis</option>
+            </select>
           </div>
           <div class="kanban" id="kanban"></div>
         </section>
@@ -123,6 +126,9 @@
             </select>
             <select id="statusFilter" aria-label="Etapa">
               <option value="all">Todas as etapas</option>
+            </select>
+            <select id="propertyFilter" aria-label="Imovel">
+              <option value="all">Todos os imoveis</option>
             </select>
           </div>
           <div class="table-shell">

@@ -91,8 +91,10 @@ const els = {
   goalBar: document.querySelector("#goalBar"),
   searchInput: document.querySelector("#searchInput"),
   pipelineSearch: document.querySelector("#pipelineSearch"),
+  pipelinePropertyFilter: document.querySelector("#pipelinePropertyFilter"),
   channelFilter: document.querySelector("#channelFilter"),
   statusFilter: document.querySelector("#statusFilter"),
+  propertyFilter: document.querySelector("#propertyFilter"),
   periodFilter: document.querySelector("#periodFilter"),
   dialog: document.querySelector("#leadDialog"),
   form: document.querySelector("#leadForm"),
@@ -120,8 +122,10 @@ els.deleteLeadBtn.addEventListener("click", deleteCurrentLead);
 ["input", "change"].forEach((eventName) => {
   els.searchInput.addEventListener(eventName, render);
   els.pipelineSearch.addEventListener(eventName, render);
+  els.pipelinePropertyFilter.addEventListener(eventName, render);
   els.channelFilter.addEventListener(eventName, render);
   els.statusFilter.addEventListener(eventName, render);
+  els.propertyFilter.addEventListener(eventName, render);
   els.periodFilter.addEventListener(eventName, render);
 });
 
@@ -324,6 +328,7 @@ function statusClass(status) {
 
 function filteredLeads({ table = false, pipeline = false } = {}) {
   const search = (pipeline ? els.pipelineSearch.value : els.searchInput.value).trim().toLowerCase();
+  const propertyValue = pipeline ? els.pipelinePropertyFilter.value : els.propertyFilter.value;
   return leads.filter((lead) => {
     const matchesSearch = !search || [
       lead.name,
@@ -333,7 +338,8 @@ function filteredLeads({ table = false, pipeline = false } = {}) {
     ].some((field) => String(field || "").toLowerCase().includes(search));
     const matchesChannel = !table || els.channelFilter.value === "all" || lead.channel === els.channelFilter.value;
     const matchesStatus = !table || els.statusFilter.value === "all" || lead.status === els.statusFilter.value;
-    return matchesSearch && matchesChannel && matchesStatus;
+    const matchesProperty = propertyValue === "all" || lead.propertyName === propertyValue;
+    return matchesSearch && matchesChannel && matchesStatus && matchesProperty;
   });
 }
 
@@ -499,6 +505,12 @@ function fillStatusSelects() {
   const options = statuses.map((status) => `<option>${status}</option>`).join("");
   document.querySelector("#status").innerHTML = options;
   els.statusFilter.innerHTML = `<option value="all">Todas as etapas</option>${options}`;
+}
+
+function fillPropertyFilters() {
+  const options = properties.map((property) => `<option>${property}</option>`).join("");
+  els.propertyFilter.innerHTML = `<option value="all">Todos os imoveis</option>${options}`;
+  els.pipelinePropertyFilter.innerHTML = `<option value="all">Todos os imoveis</option>${options}`;
 }
 
 function openLeadDialog(id) {
@@ -706,6 +718,7 @@ function render() {
 }
 
 fillStatusSelects();
+fillPropertyFilters();
 render();
 if (sessionStorage.getItem(authKey) === "true") {
   showApp();
