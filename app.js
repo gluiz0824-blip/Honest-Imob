@@ -5,6 +5,9 @@ const loginUsers = [
   { user: "honest", password: "honest123" },
   { user: "chefe", password: "honest123" }
 ];
+const supabaseUrl = "https://awrxwtcfyjesphvklmvs.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3cnh3dGNmeWplc3BodmtsbXZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzY3MzAsImV4cCI6MjA5NzIxMjczMH0.fxZKEjYKie4rNefGqz5kJraeMCTfnrDXP9JS9dmuwdg";
+const supabaseLeadsUrl = `${supabaseUrl}/rest/v1/leads`;
 const authKey = "honest-imob-auth";
 const storageKey = "honest-imob-sdr-leads-v4";
 const previousStorageKeys = ["imob-sdr-leads-v3", "imob-sdr-leads-v2"];
@@ -68,6 +71,7 @@ const sampleLeads = [
 ];
 
 let leads = loadLeads();
+let usingRemoteDatabase = false;
 
 const els = {
   loginScreen: document.querySelector("#loginScreen"),
@@ -160,6 +164,7 @@ function handleLogout() {
 function showApp() {
   els.loginScreen.classList.add("hidden");
   els.appShell.classList.remove("locked");
+  syncLeadsFromDatabase();
 }
 
 function normalizeLead(lead) {
@@ -193,6 +198,94 @@ function loadLeads() {
 
 function persist() {
   localStorage.setItem(storageKey, JSON.stringify(leads));
+}
+
+function supabaseHeaders(extra = {}) {
+  return {
+    apikey: supabaseAnonKey,
+    Authorization: `Bearer ${supabaseAnonKey}`,
+    "Content-Type": "application/json",
+    ...extra
+  };
+}
+
+function dbLeadToApp(row) {
+  return normalizeLead({
+    id: row.id,
+    name: row.name,
+    phone: row.phone,
+    channel: row.channel,
+    propertyName: row.property_name,
+    status: row.status,
+    firstContactDate: row.first_contact,
+    notes: row.notes,
+    createdAt: row.created_at
+  });
+}
+
+function appLeadToDb(lead) {
+  return {
+    name: lead.name,
+    phone: lead.phone,
+    channel: lead.channel,
+    property_name: lead.propertyName,
+    status: lead.status,
+    first_contact: lead.firstContactDate,
+    notes: lead.notes
+  };
+}
+
+function getSavedLocalLeads() {
+  const saved = localStorage.getItem(storageKey) || previousStorageKeys.map((key) => localStorage.getItem(key)).find(Boolean);
+  if (!saved) return [];
+  try {
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed.map(normalizeLead) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function requestSupabase(path = "", options = {}) {
+  const response = await fetch(`${supabaseLeadsUrl}${path}`, {
+    ...options,
+    headers: supabaseHeaders(options.headers)
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `Erro Supabase ${response.status}`);
+  }
+
+  if (response.status === 204) return null;
+  return response.json();
+}
+
+async function syncLeadsFromDatabase() {
+  try {
+    const rows = await requestSupabase("?select=*&order=created_at.desc");
+    let remoteLeads = rows.map(dbLeadToApp);
+    const localLeads = getSavedLocalLeads();
+
+    if (!remoteLeads.length && localLeads.length) {
+      const payload = localLeads.map(appLeadToDb);
+      const inserted = await requestSupabase("", {
+        method: "POST",
+        headers: { Prefer: "return=representation" },
+        body: JSON.stringify(payload)
+      });
+      remoteLeads = inserted.map(dbLeadToApp);
+    }
+
+    leads = remoteLeads;
+    usingRemoteDatabase = true;
+    persist();
+    render();
+  } catch (error) {
+    usingRemoteDatabase = false;
+    console.error("Nao foi possivel sincronizar com o Supabase:", error);
+    alert("Nao foi possivel conectar ao banco de dados. Confira as politicas RLS da tabela leads no Supabase.");
+  }
 }
 
 function showView(view) {
@@ -409,7 +502,7 @@ function openLeadDialog(id) {
   els.dialog.showModal();
 }
 
-function saveLead(event) {
+async function saveLead(event) {
   event.preventDefault();
   const id = document.querySelector("#leadId").value;
   const payload = normalizeLead({
@@ -424,18 +517,49 @@ function saveLead(event) {
     createdAt: leads.find((lead) => lead.id === id)?.createdAt || todayPlus(0)
   });
 
-  leads = id ? leads.map((lead) => lead.id === id ? payload : lead) : [payload, ...leads];
-  persist();
-  els.dialog.close();
-  render();
+  try {
+    if (usingRemoteDatabase) {
+      const dbPayload = appLeadToDb(payload);
+      const saved = id
+        ? await requestSupabase(`?id=eq.${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          headers: { Prefer: "return=representation" },
+          body: JSON.stringify(dbPayload)
+        })
+        : await requestSupabase("", {
+          method: "POST",
+          headers: { Prefer: "return=representation" },
+          body: JSON.stringify(dbPayload)
+        });
+      const savedLead = dbLeadToApp(Array.isArray(saved) ? saved[0] : saved);
+      leads = id ? leads.map((lead) => lead.id === id ? savedLead : lead) : [savedLead, ...leads];
+    } else {
+      leads = id ? leads.map((lead) => lead.id === id ? payload : lead) : [payload, ...leads];
+    }
+
+    persist();
+    els.dialog.close();
+    render();
+  } catch (error) {
+    console.error("Erro ao salvar lead:", error);
+    alert("Nao foi possivel salvar no banco de dados. Confira as permissoes da tabela leads no Supabase.");
+  }
 }
 
-function deleteCurrentLead() {
+async function deleteCurrentLead() {
   const id = document.querySelector("#leadId").value;
-  leads = leads.filter((lead) => lead.id !== id);
-  persist();
-  els.dialog.close();
-  render();
+  try {
+    if (usingRemoteDatabase && id) {
+      await requestSupabase(`?id=eq.${encodeURIComponent(id)}`, { method: "DELETE" });
+    }
+    leads = leads.filter((lead) => lead.id !== id);
+    persist();
+    els.dialog.close();
+    render();
+  } catch (error) {
+    console.error("Erro ao excluir lead:", error);
+    alert("Nao foi possivel excluir no banco de dados. Confira as permissoes da tabela leads no Supabase.");
+  }
 }
 
 function exportLeads() {
