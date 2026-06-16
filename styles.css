@@ -51,39 +51,37 @@ button {
   place-items: center;
   padding: 24px;
   overflow: hidden;
-  background: radial-gradient(circle at center, #151515 0%, #080808 56%, #020202 100%);
+  background: #020202;
 }
 
 .login-screen.hidden {
   display: none;
 }
 
-.login-screen::before,
+.login-screen::before {
+  content: "";
+  position: absolute;
+  inset: -8%;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.62)),
+    url("./login-bg.png");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.92;
+  filter: contrast(1.12) brightness(0.84);
+  animation: loginBgMove 16s ease-in-out infinite alternate;
+}
+
 .login-screen::after {
   content: "";
   position: absolute;
-  left: 50%;
-  width: 120vw;
-  height: 38vh;
-  opacity: 0.3;
+  inset: 0;
   pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.9) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.9) 1px, transparent 1px);
-  background-size: 42px 28px;
-  background-position: center;
-  transform-origin: center;
-  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.12));
-}
-
-.login-screen::before {
-  top: -16vh;
-  transform: translateX(-50%) perspective(520px) rotateX(-63deg);
-}
-
-.login-screen::after {
-  bottom: -16vh;
-  transform: translateX(-50%) perspective(520px) rotateX(63deg);
+  background:
+    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.1), transparent 22%),
+    linear-gradient(135deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.68));
+  animation: loginGlow 9s ease-in-out infinite alternate;
 }
 
 .login-card {
@@ -97,6 +95,30 @@ button {
   background: #fff;
   border: 1px solid #e7e7e2;
   box-shadow: var(--shadow);
+}
+
+@keyframes loginBgMove {
+  0% {
+    transform: scale(1.06) translate3d(-1.8%, -1.2%, 0);
+  }
+
+  50% {
+    transform: scale(1.12) translate3d(1.4%, 1%, 0);
+  }
+
+  100% {
+    transform: scale(1.08) translate3d(2.2%, -0.8%, 0);
+  }
+}
+
+@keyframes loginGlow {
+  0% {
+    opacity: 0.55;
+  }
+
+  100% {
+    opacity: 0.9;
+  }
 }
 
 .login-brand {
