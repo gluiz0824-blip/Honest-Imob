@@ -99,7 +99,6 @@ const els = {
   form: document.querySelector("#leadForm"),
   modalTitle: document.querySelector("#modalTitle"),
   deleteLeadBtn: document.querySelector("#deleteLeadBtn"),
-  importInput: document.querySelector("#importInput"),
   logoutBtn: document.querySelector("#logoutBtn")
 };
 
@@ -117,7 +116,6 @@ document.querySelector("#newLeadBtn").addEventListener("click", () => openLeadDi
 document.querySelector("#closeDialogBtn").addEventListener("click", () => els.dialog.close());
 document.querySelector("#cancelBtn").addEventListener("click", () => els.dialog.close());
 document.querySelector("#exportBtn").addEventListener("click", exportLeads);
-els.importInput.addEventListener("change", importLeads);
 els.form.addEventListener("submit", saveLead);
 els.deleteLeadBtn.addEventListener("click", deleteCurrentLead);
 ["input", "change"].forEach((eventName) => {
@@ -460,57 +458,125 @@ function deleteCurrentLead() {
 }
 
 function exportLeads() {
-  const blob = new Blob([JSON.stringify(leads, null, 2)], { type: "application/json" });
+  const blob = new Blob([createLeadsPdf()], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `leads-honest-imob-${todayPlus(0)}.json`;
+  link.download = `leads-honest-imob-${todayPlus(0)}.pdf`;
   link.click();
   URL.revokeObjectURL(url);
 }
 
-function importLeads(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      if (file.name.endsWith(".csv")) {
-        leads = parseCsv(String(reader.result));
-      } else {
-        const imported = JSON.parse(String(reader.result));
-        leads = Array.isArray(imported) ? imported.map(normalizeLead) : leads;
-      }
-      persist();
-      render();
-    } catch {
-      alert("Nao foi possivel importar o arquivo.");
-    } finally {
-      event.target.value = "";
+function createLeadsPdf() {
+  const pageWidth = 842;
+  const pageHeight = 595;
+  const margin = 32;
+  const rowHeight = 24;
+  const headerY = 520;
+  const rowsPerPage = 17;
+  const columns = [
+    { label: "Lead", key: "name", x: 36, width: 112 },
+    { label: "Telefone", key: "phone", x: 150, width: 92 },
+    { label: "Canal", key: "channel", x: 244, width: 70 },
+    { label: "Imovel", key: "propertyName", x: 316, width: 132 },
+    { label: "Etapa", key: "status", x: 450, width: 110 },
+    { label: "Perfil", key: "profile", x: 562, width: 112 },
+    { label: "1o contato", key: "firstContactDate", x: 676, width: 74 },
+    { label: "Obs.", key: "notes", x: 752, width: 54 }
+  ];
+
+  const rows = leads.map((lead) => ({
+    name: lead.name,
+    phone: lead.phone,
+    channel: lead.channel,
+    propertyName: lead.propertyName || "Nao informado",
+    status: lead.status,
+    profile: lead.profile,
+    firstContactDate: dateLabel(lead.firstContactDate),
+    notes: lead.notes || ""
+  }));
+  const pages = [];
+  const totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
+
+  for (let pageIndex = 0; pageIndex < totalPages; pageIndex += 1) {
+    const pageRows = rows.slice(pageIndex * rowsPerPage, (pageIndex + 1) * rowsPerPage);
+    const lines = [];
+
+    lines.push("BT /F1 18 Tf 36 558 Td (Honest Imob - SDR) Tj ET");
+    lines.push(`BT /F1 9 Tf 36 540 Td (${pdfText(`Relatorio de leads - ${dateLabel(todayPlus(0))}`)}) Tj ET`);
+    lines.push(`BT /F1 9 Tf 752 540 Td (${pdfText(`Pag. ${pageIndex + 1}/${totalPages}`)}) Tj ET`);
+    lines.push(`0.94 g ${margin} 502 ${pageWidth - margin * 2} 24 re f`);
+    lines.push("0 G 0.7 w");
+    lines.push(`${margin} 502 ${pageWidth - margin * 2} 24 re S`);
+    columns.forEach((column) => {
+      lines.push(`BT /F1 8 Tf ${column.x} 511 Td (${pdfText(column.label)}) Tj ET`);
+    });
+
+    pageRows.forEach((row, index) => {
+      const y = headerY - 42 - index * rowHeight;
+      const fill = index % 2 === 0 ? "1 g" : "0.985 g";
+      lines.push(`${fill} ${margin} ${y - 8} ${pageWidth - margin * 2} ${rowHeight} re f`);
+      lines.push(`0.82 G 0.4 w ${margin} ${y - 8} ${pageWidth - margin * 2} ${rowHeight} re S`);
+      columns.forEach((column) => {
+        const value = truncateForPdf(row[column.key], column.width);
+        lines.push(`BT /F1 7 Tf ${column.x} ${y + 1} Td (${pdfText(value)}) Tj ET`);
+      });
+    });
+
+    if (!rows.length) {
+      lines.push("BT /F1 11 Tf 36 460 Td (Nenhum lead cadastrado.) Tj ET");
     }
-  };
-  reader.readAsText(file);
+
+    pages.push(lines.join("\n"));
+  }
+
+  return buildPdf(pages, pageWidth, pageHeight);
 }
 
-function parseCsv(text) {
-  const [headerLine, ...rows] = text.trim().split(/\r?\n/);
-  const headers = headerLine.split(",").map((item) => item.trim());
-  return rows.map((row) => {
-    const values = row.split(",").map((item) => item.trim());
-    const record = Object.fromEntries(headers.map((header, index) => [header, values[index] || ""]));
-    return normalizeLead({
-      id: record.id || makeId(),
-      name: record.name || record.nome || "Lead sem nome",
-      phone: record.phone || record.telefone || "",
-      channel: record.channel || record.canal || "WhatsApp",
-      status: record.status || record.etapa || "Novo",
-      propertyName: record.propertyName || record.nomeImovel || record.address || record.endereco || record.interest || record.interesse || record.imovel || "",
-      profile: record.profile || record.perfil || record.temperature || "Qualificado",
-      firstContactDate: record.firstContactDate || record.primeiroContato || record.nextContact || "",
-      notes: record.notes || record.observacoes || "",
-      createdAt: record.createdAt || todayPlus(0)
-    });
+function truncateForPdf(value, width) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  const maxChars = Math.max(6, Math.floor(width / 4.1));
+  return text.length > maxChars ? `${text.slice(0, maxChars - 3)}...` : text;
+}
+
+function pdfText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7E]/g, "")
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)");
+}
+
+function buildPdf(pageContents, width, height) {
+  const objects = [];
+  objects.push("<< /Type /Catalog /Pages 2 0 R >>");
+  objects.push(`<< /Type /Pages /Kids [${pageContents.map((_, index) => `${3 + index * 2} 0 R`).join(" ")}] /Count ${pageContents.length} >>`);
+
+  pageContents.forEach((content, index) => {
+    const pageObject = 3 + index * 2;
+    const contentObject = pageObject + 1;
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Resources << /Font << /F1 ${3 + pageContents.length * 2} 0 R >> >> /Contents ${contentObject} 0 R >>`);
+    objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
   });
+
+  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+  objects.forEach((object, index) => {
+    offsets.push(pdf.length);
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+
+  const xrefOffset = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.slice(1).forEach((offset) => {
+    pdf += `${String(offset).padStart(10, "0")} 00000 n \n`;
+  });
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  return pdf;
 }
 
 function render() {
