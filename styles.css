@@ -71,7 +71,6 @@ button {
   background-repeat: no-repeat;
   opacity: 0.92;
   filter: contrast(1.04) brightness(0.76);
-  animation: loginBgMove 24s ease-in-out infinite alternate;
 }
 
 .login-screen::after {
@@ -96,20 +95,6 @@ button {
   background: #fff;
   border: 1px solid #e7e7e2;
   box-shadow: var(--shadow);
-}
-
-@keyframes loginBgMove {
-  0% {
-    transform: scale(1.01) translate3d(-0.35%, -0.2%, 0);
-  }
-
-  50% {
-    transform: scale(1.018) translate3d(0.35%, 0.25%, 0);
-  }
-
-  100% {
-    transform: scale(1.01) translate3d(0.5%, -0.2%, 0);
-  }
 }
 
 @keyframes loginGlow {
