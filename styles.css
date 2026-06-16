@@ -64,24 +64,16 @@ button {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.62)),
     url("./login-bg.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.92;
-  filter: contrast(1.04) brightness(0.76);
+  opacity: 1;
+  filter: none;
 }
 
 .login-screen::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.1), transparent 22%),
-    linear-gradient(135deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.68));
-  animation: loginGlow 9s ease-in-out infinite alternate;
+  content: none;
 }
 
 .login-card {
@@ -95,16 +87,6 @@ button {
   background: #fff;
   border: 1px solid #e7e7e2;
   box-shadow: var(--shadow);
-}
-
-@keyframes loginGlow {
-  0% {
-    opacity: 0.55;
-  }
-
-  100% {
-    opacity: 0.9;
-  }
 }
 
 .login-brand {
