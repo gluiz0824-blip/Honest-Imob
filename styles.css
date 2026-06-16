@@ -518,9 +518,6 @@ h2 {
   font-weight: 800;
 }
 
-.tag.hot { background: #111; color: #fff; }
-.tag.warm { background: #e6f6ee; color: #106340; }
-.tag.cold { background: #f5f5f2; color: #6a6a6a; }
 .tag.channel-whatsapp { background: #e7f7ef; color: #137447; }
 .tag.channel-instagram { background: #fff0f3; color: #a4162a; }
 .tag.channel-tiktok { background: #eaf6fb; color: #14637f; }

@@ -17,7 +17,6 @@ const sampleLeads = [
     channel: "WhatsApp",
     status: "Visita agendada",
     propertyName: "Pontal EcoLife",
-    profile: "Pronto para visita",
     firstContactDate: todayPlus(0),
     notes: "Lead interessado em revenda. Quer entender condicoes e disponibilidade para visita.",
     createdAt: todayPlus(-2)
@@ -29,9 +28,8 @@ const sampleLeads = [
     channel: "Instagram",
     status: "Fazer follow-up",
     propertyName: "Intense Parque Cascavel",
-    profile: "Qualificado",
     firstContactDate: todayPlus(-1),
-    notes: "Perguntou se o imovel aceita financiamento. Perfil bom para corretor.",
+    notes: "Perguntou se o imovel aceita financiamento. Precisa de retorno.",
     createdAt: todayPlus(-5)
   },
   {
@@ -41,7 +39,6 @@ const sampleLeads = [
     channel: "TikTok",
     status: "Em contato",
     propertyName: "Rosas do Parque",
-    profile: "Pesquisar opcoes",
     firstContactDate: todayPlus(-1),
     notes: "Chegou por video do TikTok. Ainda pediu mais informacoes.",
     createdAt: todayPlus(-1)
@@ -53,7 +50,6 @@ const sampleLeads = [
     channel: "WhatsApp",
     status: "Passado ao corretor",
     propertyName: "Lagunas Setor Bueno",
-    profile: "Pronto para visita",
     firstContactDate: todayPlus(-3),
     notes: "Lead ja enviado ao corretor responsavel para continuidade.",
     createdAt: todayPlus(-12)
@@ -65,7 +61,6 @@ const sampleLeads = [
     channel: "Instagram",
     status: "Em contato",
     propertyName: "Pontal EcoLife",
-    profile: "Qualificado",
     firstContactDate: todayPlus(0),
     notes: "Primeiro contato recebido pelo Instagram. Aguardando resposta.",
     createdAt: todayPlus(-4)
@@ -177,7 +172,6 @@ function normalizeLead(lead) {
     channel: channels.includes(lead.channel) ? lead.channel : "WhatsApp",
     status: statuses.includes(migratedStatus) ? migratedStatus : "Em contato",
     propertyName: properties.includes(propertyName) ? propertyName : properties[0],
-    profile: lead.profile || lead.temperature || lead.perfil || "Qualificado",
     firstContactDate: lead.firstContactDate || lead.nextContact || lead.proximoContato || lead.createdAt || todayPlus(0),
     notes: lead.notes || lead.observacoes || "",
     createdAt: lead.createdAt || todayPlus(0)
@@ -219,12 +213,6 @@ function channelClass(channel) {
   return channel.toLowerCase();
 }
 
-function profileClass(profile) {
-  if (profile === "Pronto para visita") return "hot";
-  if (profile === "Qualificado") return "warm";
-  return "cold";
-}
-
 function statusClass(status) {
   return status.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-");
 }
@@ -236,7 +224,6 @@ function filteredLeads({ table = false, pipeline = false } = {}) {
       lead.name,
       lead.phone,
       lead.propertyName,
-      lead.profile,
       lead.notes
     ].some((field) => String(field || "").toLowerCase().includes(search));
     const matchesChannel = !table || els.channelFilter.value === "all" || lead.channel === els.channelFilter.value;
@@ -255,12 +242,12 @@ function periodLeads() {
 
 function renderKpis() {
   const active = leads.filter((lead) => !["Passado ao corretor", "Perdido"].includes(lead.status));
-  const qualified = leads.filter((lead) => ["Fazer follow-up", "Visita agendada", "Passado ao corretor"].includes(lead.status));
+  const scheduled = leads.filter((lead) => lead.status === "Visita agendada");
   const passed = leads.filter((lead) => lead.status === "Passado ao corretor");
   const kpis = [
     ["Leads totais", leads.length, "entrada dos canais"],
     ["Em atendimento", active.length, "pedem retorno"],
-    ["Qualificados", qualified.length, "com perfil melhor"],
+    ["Visitas agendadas", scheduled.length, "proximos atendimentos"],
     ["Passados ao corretor", passed.length, "prontos para seguir"]
   ];
 
@@ -272,7 +259,7 @@ function renderKpis() {
     </article>
   `).join("");
 
-  const progress = leads.length ? Math.round((qualified.length / leads.length) * 100) : 0;
+  const progress = leads.length ? Math.round(((scheduled.length + passed.length) / leads.length) * 100) : 0;
   els.goalProgress.textContent = `${progress}%`;
   els.goalBar.style.width = `${Math.min(progress, 100)}%`;
 }
@@ -312,7 +299,7 @@ function leadCard(lead) {
       <span class="property-name">${lead.propertyName || "Imovel nao informado"}</span>
       <div class="tags">
         <span class="tag channel-${channelClass(lead.channel)}">${lead.channel}</span>
-        <span class="tag ${profileClass(lead.profile)}">${lead.profile}</span>
+        <span class="tag status ${statusClass(lead.status)}">${lead.status}</span>
       </div>
     </article>
   `;
@@ -329,12 +316,8 @@ function bindCards(container = document) {
 
 function renderHotList() {
   const hot = leads
-    .filter((lead) => ["Pronto para visita", "Qualificado"].includes(lead.profile) && lead.status !== "Perdido")
-    .sort((a, b) => {
-      const aScore = a.profile === "Pronto para visita" ? 2 : 1;
-      const bScore = b.profile === "Pronto para visita" ? 2 : 1;
-      return bScore - aScore || String(a.firstContactDate || "").localeCompare(String(b.firstContactDate || ""));
-    })
+    .filter((lead) => ["Fazer follow-up", "Visita agendada"].includes(lead.status))
+    .sort((a, b) => String(a.firstContactDate || "").localeCompare(String(b.firstContactDate || "")))
     .slice(0, 6);
   els.hotList.innerHTML = hot.length ? hot.map(leadCard).join("") : emptyState();
   bindCards(els.hotList);
@@ -362,7 +345,7 @@ function renderKanban() {
 function renderRows() {
   const data = filteredLeads({ table: true });
   if (!data.length) {
-    els.leadRows.innerHTML = `<tr><td colspan="7">${emptyState()}</td></tr>`;
+    els.leadRows.innerHTML = `<tr><td colspan="6">${emptyState()}</td></tr>`;
     return;
   }
   els.leadRows.innerHTML = data.map((lead) => `
@@ -371,7 +354,6 @@ function renderRows() {
       <td><span class="tag channel-${channelClass(lead.channel)}">${lead.channel}</span></td>
       <td><strong>${lead.propertyName || "Nao informado"}</strong></td>
       <td><span class="tag status ${statusClass(lead.status)}">${lead.status}</span></td>
-      <td><span class="tag ${profileClass(lead.profile)}">${lead.profile}</span></td>
       <td>${dateLabel(lead.firstContactDate)}</td>
       <td><button class="row-button ghost-button" type="button" data-edit="${lead.id}">Editar</button></td>
     </tr>
@@ -420,7 +402,6 @@ function openLeadDialog(id) {
   document.querySelector("#channel").value = lead?.channel || "WhatsApp";
   document.querySelector("#status").value = lead?.status || "Em contato";
   document.querySelector("#interest").value = lead?.propertyName || "";
-  document.querySelector("#temperature").value = lead?.profile || "Qualificado";
   document.querySelector("#nextContact").value = lead?.firstContactDate || todayPlus(0);
   document.querySelector("#notes").value = lead?.notes || "";
   els.modalTitle.textContent = lead ? "Editar Lead" : "Novo Lead";
@@ -438,7 +419,6 @@ function saveLead(event) {
     channel: document.querySelector("#channel").value,
     status: document.querySelector("#status").value,
     propertyName: document.querySelector("#interest").value.trim(),
-    profile: document.querySelector("#temperature").value,
     firstContactDate: document.querySelector("#nextContact").value,
     notes: document.querySelector("#notes").value.trim(),
     createdAt: leads.find((lead) => lead.id === id)?.createdAt || todayPlus(0)

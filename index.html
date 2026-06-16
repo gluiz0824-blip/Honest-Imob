@@ -46,7 +46,7 @@
           <a href="#agenda" data-view-link="agenda">Agenda</a>
         </nav>
         <div class="mini-card">
-          <span>Leads qualificados</span>
+          <span>Avanco do funil</span>
           <strong id="goalProgress">0%</strong>
           <div class="progress-track"><span id="goalBar"></span></div>
         </div>
@@ -94,8 +94,8 @@
             <section class="panel span-3">
               <div class="panel-head">
                 <div>
-                  <h2>Leads prioritarios</h2>
-                  <p>Priorize quem tem perfil bom para revenda em Goiania.</p>
+                  <h2>Leads para acompanhar</h2>
+                  <p>Veja quem esta em follow-up ou com visita agendada.</p>
                 </div>
               </div>
               <div class="hot-list" id="hotList"></div>
@@ -133,7 +133,6 @@
                   <th>Canal</th>
                   <th>Imovel</th>
                   <th>Etapa</th>
-                  <th>Perfil</th>
                   <th>Primeiro contato</th>
                   <th></th>
                 </tr>
@@ -165,7 +164,6 @@
                 <li>Confirmar nome e telefone do lead</li>
                 <li>Registrar o nome do imovel de interesse</li>
                 <li>Marcar a etapa atual do atendimento SDR</li>
-                <li>Definir o perfil do lead com clareza</li>
                 <li>Anotar observacoes importantes da conversa</li>
               </ul>
             </section>
@@ -200,14 +198,6 @@
           </label>
           <label>Etapa SDR
             <select id="status" required></select>
-          </label>
-          <label>Perfil do lead
-            <select id="temperature">
-              <option>Pronto para visita</option>
-              <option>Qualificado</option>
-              <option>Pesquisar opcoes</option>
-              <option>Sem perfil</option>
-            </select>
           </label>
           <label>Data do primeiro contato
             <input id="nextContact" type="date" />
